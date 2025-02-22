@@ -21,7 +21,7 @@ provider "aws" {
 }
 
 resource "aws_s3_bucket" "website_bucket" {
-  bucket = "static-us-east-1.ahbalbaid-website-bucket"
+  bucket = "static-us-east-1.ahbalbaid.com"
   force_destroy = true
 
   website {
@@ -41,7 +41,7 @@ resource "aws_s3_bucket_policy" "website_bucket_policy" {
       "Effect": "Allow",
       "Principal": "*",
       "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::static-us-east-1.ahbalbaid-website-bucket/*"
+      "Resource": "arn:aws:s3:::static-us-east-1.ahbalbaid.com/*"
     }
   ]
 }
@@ -64,6 +64,11 @@ resource "aws_s3_bucket_public_access_block" "website_bucket_block" {
 resource "aws_acm_certificate" "certificate" {
   domain_name       = "ahbalbaid.com"
   validation_method = "DNS"
+  subject_alternative_names = ["*.ahbalbaid.com"]
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # Route53 Hosted Zone
@@ -97,6 +102,12 @@ resource "aws_cloudfront_distribution" "website_distribution" {
   is_ipv6_enabled     = true
   default_root_object = "index.html"
 
+  aliases = [
+    "static-us-east-1.ahbalbaid.com",
+    "ahbalbaid.com",
+    "*.ahbalbaid.com"
+  ]
+
   default_cache_behavior {
     target_origin_id       = "s3-origin"
     viewer_protocol_policy = "redirect-to-https"
@@ -104,7 +115,6 @@ resource "aws_cloudfront_distribution" "website_distribution" {
     cached_methods         = ["GET", "HEAD"]
 
     cache_policy_id          = "658327ea-f89d-4fab-a63d-7e88639e58f6" # AWS managed CachingOptimized policy
-    origin_request_policy_id = "88a5eaf4-2fd4-4709-b370-b4c650ea3fcf" # AWS managed CORS-S3Origin policy
     compress                 = true
   }
 
