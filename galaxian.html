@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Galaxian</title>
+    <link rel="stylesheet" type="text/css" href="styles/style.css" />
+  </head>
+
+  <body>
+    <ul class="navbar">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="portfolio.html">Portfolio</a></li>
+      <li><a href="qualifications.html">Qualifications</a></li>
+      <li><a href="service.html">Service</a></li>
+      <li><a href="galaxian.html">Galaxian</a></li>
+      <li><a onclick="toggleStyle()">mode</a></li>
+    </ul>
+    <div>
+      <canvas id="gameCanvas" width="800" height="600"></canvas>
+      <script src="./scripts/game.js"></script>
+    </div>
+
+    <section>
+      <h1>Conversation Summary</h1>
+
+      <div>
+        <h2>Topic: JavaScript Game Development</h2>
+        <p>
+          We discussed the development of a simple 2D game using HTML5 Canvas
+          and JavaScript. The game includes a ship controlled by the player,
+          enemies, bullets, and a scoring system.
+        </p>
+      </div>
+
+      <div>
+        <h2>Excerpts from our Conversation:</h2>
+        <blockquote>
+          <p>
+            User: "...now I can see the game and I can move the ship and shoot
+            but the bullet is not working and the score is not incrementing..."
+          </p>
+        </blockquote>
+        <blockquote>
+          <p>
+            Assistant: "I noticed that after detecting a collision, the code
+            simply increments the score but doesn't handle the removal of
+            bullets or enemies... I suggest making modifications to the
+            `checkBulletEnemyCollisions()` function."
+          </p>
+        </blockquote>
+        <blockquote>
+          <p>User: "...when the bullet and enemy collides nothing happen..."</p>
+        </blockquote>
+        <blockquote>
+          <p>
+            Assistant: "Let's address the bullet-enemy collision issue... You
+            need to handle the removal of both the bullet and the enemy from
+            their respective arrays after a collision."
+          </p>
+        </blockquote>
+      </div>
+
+      <div>
+        <h2>Conclusion:</h2>
+        <p>
+          Through this conversation, we collaborated on identifying and
+          resolving game mechanics and logic issues in the user's JavaScript
+          game, focusing particularly on bullet behavior, collision detection,
+          and scoring.
+        </p>
+      </div>
+    </section>
+  </body>
+</html>
