@@ -98,16 +98,13 @@ resource "aws_cloudfront_distribution" "website_distribution" {
 
   default_cache_behavior {
     target_origin_id       = "s3-origin"
-    viewer_protocol_policy = "allow-all"
-    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
-    cached_methods         = ["GET", "HEAD", "OPTIONS"]
+    viewer_protocol_policy = "redirect-to-https"
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
 
-    forwarded_values {
-      query_string = false
-      cookies {
-        forward = "none"
-      }
-    }
+    cache_policy_id          = "658327ea-f89d-4fab-a63d-7e88639e58f6" # AWS managed CachingOptimized policy
+    origin_request_policy_id = "88a5eaf4-2fd4-4709-b370-b4c650ea3fcf" # AWS managed CORS-S3Origin policy
+    compress                 = true
   }
 
   restrictions {
