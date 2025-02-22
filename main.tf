@@ -88,15 +88,8 @@ resource "aws_acm_certificate_validation" "certificate_validation" {
 # CloudFront Distribution using the S3 website bucket
 resource "aws_cloudfront_distribution" "website_distribution" {
   origin {
-    domain_name = aws_s3_bucket.website_bucket.website_endpoint
-    origin_id   = "s3-website-origin"
-
-    custom_origin_config {
-      http_port              = 80
-      https_port             = 443
-      origin_protocol_policy = "http-only"  # S3 website endpoints only support HTTP.
-      origin_ssl_protocols   = ["TLSv1.2"]
-    }
+    domain_name = aws_s3_bucket.website_bucket.bucket_regional_domain_name
+    origin_id   = "s3-origin"
   }
 
   enabled             = true
@@ -104,8 +97,8 @@ resource "aws_cloudfront_distribution" "website_distribution" {
   default_root_object = "index.html"
 
   default_cache_behavior {
-    target_origin_id       = "s3-website-origin"
-    viewer_protocol_policy = "redirect-to-https"
+    target_origin_id       = "s3-origin"
+    viewer_protocol_policy = "allow-all"
     allowed_methods        = ["GET", "HEAD", "OPTIONS"]
     cached_methods         = ["GET", "HEAD", "OPTIONS"]
 
