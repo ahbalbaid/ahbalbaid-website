@@ -21,7 +21,8 @@ provider "aws" {
 }
 
 resource "aws_s3_bucket" "website_bucket" {
-  bucket = "ahbalbaid-website-bucket"
+  bucket = "static-us-east-1.ahbalbaid-website-bucket"
+  force_destroy = true
 
   website {
     index_document = "index.html"
@@ -40,7 +41,7 @@ resource "aws_s3_bucket_policy" "website_bucket_policy" {
       "Effect": "Allow",
       "Principal": "*",
       "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::ahbalbaid-website-bucket/*"
+      "Resource": "arn:aws:s3:::static-us-east-1.ahbalbaid-website-bucket/*"
     }
   ]
 }
@@ -53,9 +54,9 @@ POLICY
 resource "aws_s3_bucket_public_access_block" "website_bucket_block" {
   bucket = aws_s3_bucket.website_bucket.id
 
-  block_public_acls       = true
+  block_public_acls       = false
   block_public_policy     = false
-  ignore_public_acls      = true
+  ignore_public_acls      = false
   restrict_public_buckets = false
 }
 
