@@ -20,21 +20,43 @@ provider "aws" {
   region = "us-east-1"
 }
 
-variable "github_token" {
-  description = "GitHub OAuth token for CodePipeline source integration"
-  type        = string
-  sensitive   = true
-}
-
-# Website S3 Bucket
 resource "aws_s3_bucket" "website_bucket" {
-  bucket = "personal-website-bucket"
-  acl    = "public-read"
+  bucket = "ahbalbaid-website-bucket"
 
   website {
     index_document = "index.html"
     error_document = "error.html"
   }
+}
+
+resource "aws_s3_bucket_policy" "website_bucket_policy" {
+  bucket = aws_s3_bucket.website_bucket.id
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "PublicReadGetObject",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::ahbalbaid-website-bucket/*"
+    }
+  ]
+}
+POLICY
+
+  depends_on = [aws_s3_bucket_public_access_block.website_bucket_block]
+}
+
+
+resource "aws_s3_bucket_public_access_block" "website_bucket_block" {
+  bucket = aws_s3_bucket.website_bucket.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
 }
 
 # ACM Certificate for the domain
@@ -51,9 +73,9 @@ resource "aws_route53_zone" "primary" {
 # DNS Record for certificate validation
 resource "aws_route53_record" "certificate_validation" {
   zone_id = aws_route53_zone.primary.zone_id
-  name    = aws_acm_certificate.certificate.domain_validation_options[0].resource_record_name
-  type    = aws_acm_certificate.certificate.domain_validation_options[0].resource_record_type
-  records = [aws_acm_certificate.certificate.domain_validation_options[0].resource_record_value]
+  name    = tolist(aws_acm_certificate.certificate.domain_validation_options)[0].resource_record_name
+  type    = tolist(aws_acm_certificate.certificate.domain_validation_options)[0].resource_record_type
+  records = [tolist(aws_acm_certificate.certificate.domain_validation_options)[0].resource_record_value]
   ttl     = 60
 }
 
@@ -68,6 +90,13 @@ resource "aws_cloudfront_distribution" "website_distribution" {
   origin {
     domain_name = aws_s3_bucket.website_bucket.website_endpoint
     origin_id   = "s3-website-origin"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "http-only"  # S3 website endpoints only support HTTP.
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
   }
 
   enabled             = true
@@ -85,6 +114,12 @@ resource "aws_cloudfront_distribution" "website_distribution" {
       cookies {
         forward = "none"
       }
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
     }
   }
 
@@ -108,21 +143,18 @@ resource "aws_route53_record" "website_record" {
 
 # Artifact Bucket for CodePipeline
 resource "aws_s3_bucket" "artifact_bucket" {
-  bucket = "personal-website-artifact-bucket"
-  acl    = "private"
+  bucket = "ahbalbaid-website-artifact-bucket"
 }
 
 # IAM Role for CodePipeline
 resource "aws_iam_role" "codepipeline_role" {
   name = "codepipeline-role-personal-website"
   assume_role_policy = jsonencode({
-    Version = "2012-10-17",
+    Version   = "2012-10-17",
     Statement = [{
-      Effect = "Allow",
-      Principal = {
-        Service = "codepipeline.amazonaws.com"
-      },
-      Action = "sts:AssumeRole"
+      Effect    = "Allow",
+      Principal = { Service = "codepipeline.amazonaws.com" },
+      Action    = "sts:AssumeRole"
     }]
   })
 }
@@ -131,19 +163,17 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
   name = "codepipeline-policy-personal-website"
   role = aws_iam_role.codepipeline_role.id
   policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Action = [
-          "s3:*",
-          "codebuild:BatchGetBuilds",
-          "codebuild:StartBuild",
-          "iam:PassRole"
-        ],
-        Resource = "*"
-      }
-    ]
+    Version   = "2012-10-17",
+    Statement = [{
+      Effect   = "Allow",
+      Action   = [
+        "s3:*",
+        "codebuild:BatchGetBuilds",
+        "codebuild:StartBuild",
+        "iam:PassRole"
+      ],
+      Resource = "*"
+    }]
   })
 }
 
@@ -151,13 +181,11 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
 resource "aws_iam_role" "codebuild_role" {
   name = "codebuild-role-personal-website"
   assume_role_policy = jsonencode({
-    Version = "2012-10-17",
+    Version   = "2012-10-17",
     Statement = [{
-      Effect = "Allow",
-      Principal = {
-        Service = "codebuild.amazonaws.com"
-      },
-      Action = "sts:AssumeRole"
+      Effect    = "Allow",
+      Principal = { Service = "codebuild.amazonaws.com" },
+      Action    = "sts:AssumeRole"
     }]
   })
 }
@@ -166,16 +194,25 @@ resource "aws_iam_role_policy" "codebuild_policy" {
   name = "codebuild-policy-personal-website"
   role = aws_iam_role.codebuild_role.id
   policy = jsonencode({
-    Version = "2012-10-17",
+    Version   = "2012-10-17",
     Statement = [
       {
-        Effect = "Allow",
-        Action = [
+        Effect   = "Allow",
+        Action   = [
           "cloudfront:CreateInvalidation",
           "s3:GetObject",
           "s3:PutObject",
           "s3:GetObjectVersion",
           "s3:ListBucket"
+        ],
+        Resource = "*"
+      },
+      {
+        Effect   = "Allow",
+        Action   = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
         ],
         Resource = "*"
       }
@@ -188,17 +225,19 @@ resource "aws_codebuild_project" "invalidate_cache" {
   name         = "invalidate-cloudfront-cache"
   service_role = aws_iam_role.codebuild_role.arn
 
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
   environment {
     compute_type = "BUILD_GENERAL1_SMALL"
     image        = "aws/codebuild/standard:5.0"
     type         = "LINUX_CONTAINER"
 
-    environment_variables = [
-      {
-        name  = "DISTRIBUTION_ID"
-        value = aws_cloudfront_distribution.website_distribution.id
-      }
-    ]
+    environment_variable {
+      name  = "DISTRIBUTION_ID"
+      value = aws_cloudfront_distribution.website_distribution.id
+    }
   }
 
   source {
@@ -213,6 +252,13 @@ phases:
 EOF
   }
 }
+
+variable "github_token" {
+  description = "GitHub OAuth token for CodePipeline source integration."
+  type        = string
+  sensitive   = true
+}
+
 
 # CodePipeline for CI/CD
 resource "aws_codepipeline" "pipeline" {
@@ -252,6 +298,7 @@ resource "aws_codepipeline" "pipeline" {
       category        = "Deploy"
       owner           = "AWS"
       provider        = "S3"
+      version         = "1" 
       input_artifacts = ["source_output"]
       configuration = {
         BucketName = aws_s3_bucket.website_bucket.bucket
@@ -267,6 +314,7 @@ resource "aws_codepipeline" "pipeline" {
       category        = "Build"
       owner           = "AWS"
       provider        = "CodeBuild"
+      version         = "1" 
       input_artifacts = ["source_output"]
       configuration = {
         ProjectName = aws_codebuild_project.invalidate_cache.name
@@ -274,3 +322,4 @@ resource "aws_codepipeline" "pipeline" {
     }
   }
 }
+
