@@ -17,11 +17,12 @@ terraform {
 }
 
 provider "aws" {
-  region = "us-east-1"
+  region = var.aws_region
 }
 
+# S3
 resource "aws_s3_bucket" "website_bucket" {
-  bucket = "static-us-east-1.ahbalbaid.com"
+  bucket        = "${var.bucket_prefix}.${var.domain_name}"
   force_destroy = true
 
   website {
@@ -32,51 +33,35 @@ resource "aws_s3_bucket" "website_bucket" {
 
 resource "aws_s3_bucket_policy" "website_bucket_policy" {
   bucket = aws_s3_bucket.website_bucket.id
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "PublicReadGetObject",
-      "Effect": "Allow",
-      "Principal": "*",
-      "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::static-us-east-1.ahbalbaid.com/*"
-    }
-  ]
-}
-POLICY
-
-  depends_on = [aws_s3_bucket_public_access_block.website_bucket_block]
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid       = "PublicReadGetObject",
+        Effect    = "Allow",
+        Principal = "*",
+        Action    = "s3:GetObject",
+        Resource  = "arn:aws:s3:::${var.bucket_prefix}.${var.domain_name}/*"
+      }
+    ]
+  })
 }
 
-
-resource "aws_s3_bucket_public_access_block" "website_bucket_block" {
-  bucket = aws_s3_bucket.website_bucket.id
-
-  block_public_acls       = false
-  block_public_policy     = false
-  ignore_public_acls      = false
-  restrict_public_buckets = false
-}
-
-# ACM Certificate for the domain
+# ROUT53 + ACM
 resource "aws_acm_certificate" "certificate" {
-  domain_name       = "ahbalbaid.com"
-  validation_method = "DNS"
-  subject_alternative_names = ["*.ahbalbaid.com"]
+  domain_name               = var.domain_name
+  validation_method         = "DNS"
+  subject_alternative_names = ["*.${var.domain_name}"]
 
   lifecycle {
     create_before_destroy = true
   }
 }
 
-# Route53 Hosted Zone
 resource "aws_route53_zone" "primary" {
-  name = "ahbalbaid.com"
+  name = var.domain_name
 }
 
-# DNS Record for certificate validation
 resource "aws_route53_record" "certificate_validation" {
   zone_id = aws_route53_zone.primary.zone_id
   name    = tolist(aws_acm_certificate.certificate.domain_validation_options)[0].resource_record_name
@@ -85,13 +70,12 @@ resource "aws_route53_record" "certificate_validation" {
   ttl     = 60
 }
 
-# Validate the ACM certificate using the DNS record
 resource "aws_acm_certificate_validation" "certificate_validation" {
   certificate_arn         = aws_acm_certificate.certificate.arn
   validation_record_fqdns = [aws_route53_record.certificate_validation.fqdn]
 }
 
-# CloudFront Distribution using the S3 website bucket
+# CloudFront
 resource "aws_cloudfront_distribution" "website_distribution" {
   origin {
     domain_name = aws_s3_bucket.website_bucket.bucket_regional_domain_name
@@ -103,9 +87,9 @@ resource "aws_cloudfront_distribution" "website_distribution" {
   default_root_object = "index.html"
 
   aliases = [
-    "static-us-east-1.ahbalbaid.com",
-    "ahbalbaid.com",
-    "*.ahbalbaid.com"
+    "${var.bucket_prefix}.${var.domain_name}",
+    var.domain_name,
+    "*.${var.domain_name}"
   ]
 
   default_cache_behavior {
@@ -113,9 +97,8 @@ resource "aws_cloudfront_distribution" "website_distribution" {
     viewer_protocol_policy = "redirect-to-https"
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
-
-    cache_policy_id          = "658327ea-f89d-4fab-a63d-7e88639e58f6" # AWS managed CachingOptimized policy
-    compress                 = true
+    cache_policy_id        = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+    compress               = true
   }
 
   restrictions {
@@ -130,10 +113,9 @@ resource "aws_cloudfront_distribution" "website_distribution" {
   }
 }
 
-# DNS Record to point your domain to CloudFront
 resource "aws_route53_record" "website_record" {
   zone_id = aws_route53_zone.primary.zone_id
-  name    = "ahbalbaid.com"
+  name    = var.domain_name
   type    = "A"
   alias {
     name                   = aws_cloudfront_distribution.website_distribution.domain_name
@@ -142,14 +124,13 @@ resource "aws_route53_record" "website_record" {
   }
 }
 
-# Artifact Bucket for CodePipeline
 resource "aws_s3_bucket" "artifact_bucket" {
-  bucket = "ahbalbaid-website-artifact-bucket"
+  bucket = "${var.domain_name}-artifact-bucket"
 }
 
-# IAM Role for CodePipeline
+# CodePipeline + CodeBuild
 resource "aws_iam_role" "codepipeline_role" {
-  name = "codepipeline-role-personal-website"
+  name = "codepipeline-role-${var.domain_name}"
   assume_role_policy = jsonencode({
     Version   = "2012-10-17",
     Statement = [{
@@ -161,7 +142,7 @@ resource "aws_iam_role" "codepipeline_role" {
 }
 
 resource "aws_iam_role_policy" "codepipeline_policy" {
-  name = "codepipeline-policy-personal-website"
+  name = "codepipeline-policy-${var.domain_name}"
   role = aws_iam_role.codepipeline_role.id
   policy = jsonencode({
     Version   = "2012-10-17",
@@ -178,9 +159,8 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
   })
 }
 
-# IAM Role for CodeBuild
 resource "aws_iam_role" "codebuild_role" {
-  name = "codebuild-role-personal-website"
+  name = "codebuild-role-${var.domain_name}"
   assume_role_policy = jsonencode({
     Version   = "2012-10-17",
     Statement = [{
@@ -192,7 +172,7 @@ resource "aws_iam_role" "codebuild_role" {
 }
 
 resource "aws_iam_role_policy" "codebuild_policy" {
-  name = "codebuild-policy-personal-website"
+  name = "codebuild-policy-${var.domain_name}"
   role = aws_iam_role.codebuild_role.id
   policy = jsonencode({
     Version   = "2012-10-17",
@@ -221,7 +201,6 @@ resource "aws_iam_role_policy" "codebuild_policy" {
   })
 }
 
-# CodeBuild Project to Invalidate CloudFront Cache
 resource "aws_codebuild_project" "invalidate_cache" {
   name         = "invalidate-cloudfront-cache"
   service_role = aws_iam_role.codebuild_role.arn
@@ -254,16 +233,8 @@ EOF
   }
 }
 
-variable "github_token" {
-  description = "GitHub OAuth token for CodePipeline source integration."
-  type        = string
-  sensitive   = true
-}
-
-
-# CodePipeline for CI/CD
 resource "aws_codepipeline" "pipeline" {
-  name     = "personal-website-pipeline"
+  name     = "${var.domain_name}-pipeline"
   role_arn = aws_iam_role.codepipeline_role.arn
 
   artifact_store {
@@ -273,7 +244,6 @@ resource "aws_codepipeline" "pipeline" {
 
   stage {
     name = "Source"
-
     action {
       name             = "Source"
       category         = "Source"
@@ -283,9 +253,9 @@ resource "aws_codepipeline" "pipeline" {
       output_artifacts = ["source_output"]
 
       configuration = {
-        Owner      = "ahbalbaid"
-        Repo       = "ahbalbaid-website"
-        Branch     = "main"
+        Owner      = var.github_owner
+        Repo       = var.github_repo
+        Branch     = var.github_branch
         OAuthToken = var.github_token
       }
     }
@@ -293,7 +263,6 @@ resource "aws_codepipeline" "pipeline" {
 
   stage {
     name = "Deploy"
-
     action {
       name            = "Deploy"
       category        = "Deploy"
@@ -323,4 +292,3 @@ resource "aws_codepipeline" "pipeline" {
     }
   }
 }
-

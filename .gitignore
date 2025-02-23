@@ -3,4 +3,6 @@
 .terraform/*
 .terraform/*/**
 .terraform/**/*
-
+variables.tf
+terraform.tfvars
+terraform.auto.tfvars
