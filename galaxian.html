@@ -3,73 +3,232 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Galaxian</title>
-    <link rel="stylesheet" type="text/css" href="styles/style.css" />
+    <title>AI Games</title>
+    <link rel="stylesheet" type="text/css" href="styles/board.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
 
   <body>
-    <ul class="navbar">
-      <li><a href="index.html">Home</a></li>
-      <li><a href="portfolio.html">Portfolio</a></li>
-      <li><a href="qualifications.html">Qualifications</a></li>
-      <li><a href="service.html">Service</a></li>
-      <li><a href="galaxian.html">Galaxian</a></li>
-      <li><a onclick="toggleStyle()">mode</a></li>
-    </ul>
-    <div>
-      <canvas id="gameCanvas" width="800" height="600"></canvas>
-      <script src="./scripts/game.js"></script>
+    <header class="bg-white w-full">
+      <div class="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
+        <div class="flex h-16 items-center justify-between">
+          <div class="flex-1 md:flex md:items-center md:gap-12">
+            <a
+              href="index.html"
+              class="p-4 text-3xl font-bold text-gray-900 hover:text-gray-600"
+            >
+              Abdullah Balbaid
+            </a>
+          </div>
+          <div class="md:flex md:items-center md:gap-12">
+            <nav aria-label="Global" class="hidden md:block">
+              <ul class="flex items-center gap-6 text-sm">
+                <li>
+                  <a
+                    class="text-gray-500 transition hover:text-gray-500/75"
+                    href="portfolio.html"
+                  >
+                    Portfolio
+                  </a>
+                </li>
+                <li>
+                  <a
+                    class="text-gray-500 transition hover:text-gray-500/75"
+                    href="qualifications.html"
+                  >
+                    Qualifications
+                  </a>
+                </li>
+                <li>
+                  <a
+                    class="text-gray-500 transition hover:text-gray-500/75"
+                    href="service.html"
+                  >
+                    Service
+                  </a>
+                </li>
+                <li>
+                  <a
+                    class="text-gray-500 transition hover:text-gray-500/75"
+                    href="https://chat-room-topaz-nu.vercel.app"
+                  >
+                    Chat
+                  </a>
+                </li>
+                <li>
+                  <a
+                    class="text-gray-500 transition hover:text-gray-500/75"
+                    href="galaxian.html"
+                  >
+                    AI Games
+                  </a>
+                </li>
+                <li>
+                  <a
+                    class="text-gray-500 transition hover:text-gray-500/75"
+                    href="draw.html"
+                  >
+                    Draw
+                  </a>
+                </li>
+              </ul>
+            </nav>
+            <div class="flex items-center gap-4">
+              <div class="sm:flex sm:gap-4">
+                <a
+                  class="rounded-md bg-gray-900 hover:bg-gray-600 px-5 py-2.5 text-sm font-medium text-white shadow"
+                  href="https://drive.google.com/file/d/10-ABZ_jpxcaglWg4zhWrK9ktoQ_5xuq1/view?usp=sharing"
+                >
+                  Resume
+                </a>
+              </div>
+              <div class="block md:hidden">
+                <button
+                  class="rounded bg-gray-100 p-2 text-gray-600 transition hover:text-gray-600/75"
+                  onclick="toggleMenu()"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+    <div id="menu" style="display: none">
+      <ul class="block md:hidden space-y-1">
+        <li>
+          <a
+            href="portfolio.html"
+            class="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+          >
+            Portfolio
+          </a>
+        </li>
+        <li>
+          <a
+            href="qualifications.html"
+            class="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+          >
+            Qualifications
+          </a>
+        </li>
+        <li>
+          <a
+            href="service.html"
+            class="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+          >
+            Service
+          </a>
+        </li>
+        <li>
+          <a
+            href="https://chat-room-topaz-nu.vercel.app"
+            class="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+          >
+            Chat
+          </a>
+        </li>
+        <li>
+          <a
+            href="galaxian.html"
+            class="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+          >
+            AI Games
+          </a>
+        </li>
+      </ul>
     </div>
-
-    <section>
-      <h1>Conversation Summary</h1>
-
-      <div>
-        <h2>Topic: JavaScript Game Development</h2>
-        <p>
-          We discussed the development of a simple 2D game using HTML5 Canvas
-          and JavaScript. The game includes a ship controlled by the player,
-          enemies, bullets, and a scoring system.
-        </p>
+    <div id="floating-tictactoe">
+      <div class="header">
+        <span>🕹 Tic Tac Toe</span>
+        <button id="close-btn">✖</button>
       </div>
+      <main>
+        <form id="tictactoe">
+          <!-- Game Cells (radio buttons) -->
+          <input type="radio" name="cell-0" id="cell-0-x" />
+          <input type="radio" name="cell-0" id="cell-0-o" />
+          <input type="radio" name="cell-1" id="cell-1-x" />
+          <input type="radio" name="cell-1" id="cell-1-o" />
+          <input type="radio" name="cell-2" id="cell-2-x" />
+          <input type="radio" name="cell-2" id="cell-2-o" />
+          <input type="radio" name="cell-3" id="cell-3-x" />
+          <input type="radio" name="cell-3" id="cell-3-o" />
+          <input type="radio" name="cell-4" id="cell-4-x" />
+          <input type="radio" name="cell-4" id="cell-4-o" />
+          <input type="radio" name="cell-5" id="cell-5-x" />
+          <input type="radio" name="cell-5" id="cell-5-o" />
+          <input type="radio" name="cell-6" id="cell-6-x" />
+          <input type="radio" name="cell-6" id="cell-6-o" />
+          <input type="radio" name="cell-7" id="cell-7-x" />
+          <input type="radio" name="cell-7" id="cell-7-o" />
+          <input type="radio" name="cell-8" id="cell-8-x" />
+          <input type="radio" name="cell-8" id="cell-8-o" />
 
-      <div>
-        <h2>Excerpts from our Conversation:</h2>
-        <blockquote>
-          <p>
-            User: "...now I can see the game and I can move the ship and shoot
-            but the bullet is not working and the score is not incrementing..."
-          </p>
-        </blockquote>
-        <blockquote>
-          <p>
-            Assistant: "I noticed that after detecting a collision, the code
-            simply increments the score but doesn't handle the removal of
-            bullets or enemies... I suggest making modifications to the
-            `checkBulletEnemyCollisions()` function."
-          </p>
-        </blockquote>
-        <blockquote>
-          <p>User: "...when the bullet and enemy collides nothing happen..."</p>
-        </blockquote>
-        <blockquote>
-          <p>
-            Assistant: "Let's address the bullet-enemy collision issue... You
-            need to handle the removal of both the bullet and the enemy from
-            their respective arrays after a collision."
-          </p>
-        </blockquote>
-      </div>
-
-      <div>
-        <h2>Conclusion:</h2>
-        <p>
-          Through this conversation, we collaborated on identifying and
-          resolving game mechanics and logic issues in the user's JavaScript
-          game, focusing particularly on bullet behavior, collision detection,
-          and scoring.
-        </p>
-      </div>
-    </section>
+          <div id="board" class="center">
+            <!-- Game Board Tiles -->
+            <div class="tile" id="tile-0">
+              <label for="cell-0-x"></label><label for="cell-0-o"></label>
+              <div></div>
+            </div>
+            <div class="tile" id="tile-1">
+              <label for="cell-1-x"></label><label for="cell-1-o"></label>
+              <div></div>
+            </div>
+            <div class="tile" id="tile-2">
+              <label for="cell-2-x"></label><label for="cell-2-o"></label>
+              <div></div>
+            </div>
+            <div class="tile" id="tile-3">
+              <label for="cell-3-x"></label><label for="cell-3-o"></label>
+              <div></div>
+            </div>
+            <div class="tile" id="tile-4">
+              <label for="cell-4-x"></label><label for="cell-4-o"></label>
+              <div></div>
+            </div>
+            <div class="tile" id="tile-5">
+              <label for="cell-5-x"></label><label for="cell-5-o"></label>
+              <div></div>
+            </div>
+            <div class="tile" id="tile-6">
+              <label for="cell-6-x"></label><label for="cell-6-o"></label>
+              <div></div>
+            </div>
+            <div class="tile" id="tile-7">
+              <label for="cell-7-x"></label><label for="cell-7-o"></label>
+              <div></div>
+            </div>
+            <div class="tile" id="tile-8">
+              <label for="cell-8-x"></label><label for="cell-8-o"></label>
+              <div></div>
+            </div>
+            <div id="end">
+              <div id="message" class="center">
+                <div id="result-text"></div>
+                <div>
+                  <input type="reset" id="reset-btn" value="Play again" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </main>
+    </div>
+    <script src="scripts/board.js"></script>
   </body>
 </html>
