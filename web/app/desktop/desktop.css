@@ -1,0 +1,13 @@
+@layer components {
+  .desktop-icon {
+    @apply flex flex-col items-center w-20 cursor-pointer p-1 border border-transparent rounded hover:bg-white/20 hover:border-white/40 active:bg-white/30;
+  }
+
+  .taskbar-item {
+    @apply flex items-center gap-1 px-2 h-[22px] text-[11px] bg-gradient-to-b from-[#3a91e2] to-[#1268d0] border border-[#084d8e] rounded text-white min-w-[120px] max-w-[200px] truncate;
+  }
+
+  .taskbar-item.active {
+    @apply bg-gradient-to-b from-[#ffd342] to-[#e0a92c] text-black border-[#c29620];
+  }
+}
