@@ -1,7 +1,12 @@
-import { Rnd } from "react-rnd";
+"use client";
+
+import { useState } from "react";
 
 export default function GameWindow({
   windowName,
+  title,
+  icon,
+  children,
   position,
   isActive,
   onClick,
@@ -9,69 +14,125 @@ export default function GameWindow({
   onDragStop,
   onResizeStop,
   isMobile,
-  title,
-  icon,
-  children,
 }) {
+  const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+
+  // Handle window click
+  const handleWindowClick = (e) => {
+    if (!isDragging && !isResizing) {
+      onClick(windowName);
+    }
+  };
+
+  // Handle window close
+  const handleClose = (e) => {
+    e.stopPropagation();
+    onClose(windowName);
+  };
+
   return (
-    <Rnd
-      default={{
-        x: position.x,
-        y: position.y,
+    <div
+      className={`absolute flex flex-col rounded-t-lg border-2 shadow-lg overflow-hidden ${
+        isActive ? "border-[#0054e3] z-[100]" : "border-[#7a7a7a] z-[50]"
+      }`}
+      style={{
         width: position.width,
         height: position.height,
+        left: position.x,
+        top: position.y,
       }}
-      minWidth={300}
-      minHeight={350}
-      bounds=".winxp-desktop"
-      onDragStop={(e, d) => onDragStop(windowName, d)}
-      onResizeStop={(e, direction, ref, delta, pos) =>
-        onResizeStop(windowName, ref, pos)
-      }
-      className={`absolute overflow-hidden rounded-t-lg shadow-[0_5px_15px_rgba(0,0,0,0.5)] ${
-        isActive ? "z-[20]" : "z-[10]"
-      }`}
-      onClick={() => onClick(windowName)}
-      disableDragging={isMobile}
-      enableResizing={!isMobile}
+      onClick={handleWindowClick}
     >
-      <div className="flex flex-col h-full bg-[#ece9d8] border border-[#0054e3] shadow-[2px_2px_8px_rgba(0,0,0,0.3)]">
-        <div className="flex justify-between items-center px-1 py-[3px] h-[25px] cursor-move bg-gradient-to-r from-[#0078d7] via-[#26a0da] to-[#0078d7] text-white font-bold text-xs">
-          <div className="flex items-center gap-1 text-xs">
-            {icon} {title}
-          </div>
-          <div className="flex gap-[2px]">
-            <button
-              className="w-[22px] h-[22px] bg-transparent bg-center bg-no-repeat border border-transparent rounded hover:bg-white/20 hover:border-white/40"
-              style={{
-                backgroundImage:
-                  "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'><rect x='3' y='7' width='10' height='2' fill='white'/></svg>\")",
-              }}
-            ></button>
-            <button
-              className="w-[22px] h-[22px] bg-transparent bg-center bg-no-repeat border border-transparent rounded hover:bg-yellow-300/60 hover:border-white/40"
-              style={{
-                backgroundImage:
-                  "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'><rect x='3' y='3' width='10' height='10' stroke='white' fill='none' strokeWidth='2'/></svg>\")",
-              }}
-            ></button>
-            <button
-              className="w-[22px] h-[22px] bg-transparent bg-center bg-no-repeat border border-transparent rounded hover:bg-red-600/60 hover:border-white/40"
-              style={{
-                backgroundImage:
-                  "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'><path d='M3,3 L13,13 M13,3 L3,13' stroke='white' strokeWidth='2'/></svg>\")",
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                onClose(windowName);
-              }}
-            />
-          </div>
+      {/* Window Title Bar */}
+      <div
+        className="window-title-bar flex items-center justify-between px-2 py-1 cursor-move"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          const startX = e.clientX;
+          const startY = e.clientY;
+          const startLeft = position.x;
+          const startTop = position.y;
+
+          const handleMouseMove = (moveEvent) => {
+            const dx = moveEvent.clientX - startX;
+            const dy = moveEvent.clientY - startY;
+            onDragStop(windowName, { x: startLeft + dx, y: startTop + dy });
+          };
+
+          const handleMouseUp = () => {
+            document.removeEventListener("mousemove", handleMouseMove);
+            document.removeEventListener("mouseup", handleMouseUp);
+            setIsDragging(false);
+          };
+
+          setIsDragging(true);
+          document.addEventListener("mousemove", handleMouseMove);
+          document.addEventListener("mouseup", handleMouseUp);
+        }}
+        style={{
+          background: isActive
+            ? "linear-gradient(to right, #0058e0, #3a93ff)"
+            : "linear-gradient(to right, #7a7a7a, #b9b9b9)",
+          color: isActive ? "white" : "#d9d9d9",
+        }}
+      >
+        <div className="flex items-center gap-1">
+          {icon && <div className="mr-1">{icon}</div>}
+          <span className="text-sm font-bold truncate">{title}</span>
         </div>
-        <div className="flex-1 p-2 overflow-auto bg-[#ece9d8] border-t border-white">
-          {children}
+        <div className="flex gap-1">
+          <button
+            className="w-[22px] h-[22px] flex items-center justify-center text-black bg-[#e9e9e9] rounded-sm hover:bg-[#c1c1c1] active:bg-[#e9e9e9] active:shadow-inner"
+            onClick={handleClose}
+          >
+            ✕
+          </button>
         </div>
       </div>
-    </Rnd>
+
+      {/* Window Content */}
+      <div
+        className="window-content flex-1 bg-[#ece9d8] overflow-hidden"
+        style={{ touchAction: "none" }}
+      >
+        {children}
+      </div>
+
+      {/* Resize Handle */}
+      <div
+        className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          const startX = e.clientX;
+          const startY = e.clientY;
+          const startWidth = position.width;
+          const startHeight = position.height;
+
+          const handleMouseMove = (moveEvent) => {
+            const dx = moveEvent.clientX - startX;
+            const dy = moveEvent.clientY - startY;
+            const newWidth = Math.max(280, startWidth + dx);
+            const newHeight = Math.max(200, startHeight + dy);
+
+            onResizeStop(
+              windowName,
+              { style: { width: newWidth, height: newHeight } },
+              {}
+            );
+          };
+
+          const handleMouseUp = () => {
+            document.removeEventListener("mousemove", handleMouseMove);
+            document.removeEventListener("mouseup", handleMouseUp);
+            setIsResizing(false);
+          };
+
+          setIsResizing(true);
+          document.addEventListener("mousemove", handleMouseMove);
+          document.addEventListener("mouseup", handleMouseUp);
+        }}
+      />
+    </div>
   );
 }

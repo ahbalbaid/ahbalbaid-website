@@ -1,3 +1,5 @@
+"use client";
+
 export default function StartMenu({ onAppClick, onClose, refProp }) {
   return (
     <div
@@ -51,6 +53,89 @@ export default function StartMenu({ onAppClick, onClose, refProp }) {
             <rect x="32" y="32" width="10" height="10" rx="1" fill="white" />
           </svg>{" "}
           <span>Tic Tac Toe</span>
+        </div>
+
+        <div
+          className="flex items-center gap-2 p-2 cursor-pointer hover:bg-[#316ac5] hover:text-white"
+          onClick={() => {
+            onAppClick("pong");
+            onClose();
+          }}
+        >
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 48 48"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect width="48" height="48" rx="4" fill="#4CAF50" />
+            <rect x="8" y="12" width="6" height="24" rx="1" fill="white" />
+            <rect x="34" y="12" width="6" height="24" rx="1" fill="white" />
+            <circle cx="24" cy="24" r="4" fill="white" />
+            <line
+              x1="24"
+              y1="6"
+              x2="24"
+              y2="42"
+              stroke="white"
+              strokeWidth="2"
+              strokeDasharray="4 4"
+            />
+          </svg>{" "}
+          <span>Pong</span>
+        </div>
+
+        <div
+          className="flex items-center gap-2 p-2 cursor-pointer hover:bg-[#316ac5] hover:text-white"
+          onClick={() => {
+            onAppClick("connect4");
+            onClose();
+          }}
+        >
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 48 48"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect width="48" height="48" rx="4" fill="#0054e3" />
+            <circle cx="12" cy="12" r="5" fill="white" />
+            <circle cx="24" cy="12" r="5" fill="white" />
+            <circle cx="36" cy="12" r="5" fill="white" />
+            <circle cx="12" cy="24" r="5" fill="white" />
+            <circle cx="24" cy="24" r="5" fill="red" />
+            <circle cx="36" cy="24" r="5" fill="yellow" />
+            <circle cx="12" cy="36" r="5" fill="red" />
+            <circle cx="24" cy="36" r="5" fill="yellow" />
+            <circle cx="36" cy="36" r="5" fill="red" />
+          </svg>{" "}
+          <span>Connect 4</span>
+        </div>
+
+        <div
+          className="flex items-center gap-2 p-2 cursor-pointer hover:bg-[#316ac5] hover:text-white"
+          onClick={() => {
+            onAppClick("draw");
+            onClose();
+          }}
+        >
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 48 48"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect width="48" height="48" rx="4" fill="#1E88E5" />
+            <rect x="6" y="6" width="36" height="28" rx="2" fill="white" />
+            <rect x="8" y="8" width="32" height="24" rx="1" fill="#F0F0F0" />
+            <circle cx="14" cy="16" r="3" fill="#FF0000" />
+            <circle cx="22" cy="16" r="3" fill="#00FF00" />
+            <circle cx="30" cy="16" r="3" fill="#0000FF" />
+          </svg>{" "}
+          <span>Paint</span>
         </div>
       </div>
 
