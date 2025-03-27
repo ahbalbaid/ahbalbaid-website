@@ -1,8 +1,0 @@
-.terraform.lock.hcl
-.terraform/
-.terraform/*
-.terraform/*/**
-.terraform/**/*
-variables.tf
-terraform.tfvars
-terraform.auto.tfvars
