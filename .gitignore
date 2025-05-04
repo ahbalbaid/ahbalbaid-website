@@ -1,0 +1,9 @@
+.terraform
+.terraform/
+.terraform.*
+terraform.*
+.vscode/
+*.tf
+
+
+
